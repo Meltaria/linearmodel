@@ -1,0 +1,90 @@
+---
+title: "linermodel"
+author: "Yuchen Hua"
+date: "2022-11-25"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(p8105.datasets)
+
+set.seed(1)
+```
+
+```{r}
+data("nyc_airbnb")
+
+nyc_airbnb = 
+  nyc_airbnb %>% 
+  mutate(stars = review_scores_location / 2) %>% 
+  rename(
+    borough = neighbourhood_group,
+    neighborhood = neighbourhood) %>% 
+  filter(borough != "Staten Island") %>% 
+  select(price, stars, borough, neighborhood, room_type)
+
+```
+
+## fit a model
+```{r}
+nyc_airbnb %>%
+  ggplot(aes(x = stars, y= price, color = borough))+
+  geom_point()
+```
+
+Let's fit the model 
+```{r, include= FALSE}
+fit = lm(price ~stars + borough, data = nyc_airbnb)
+summary(fit)
+summary(fit)$coef
+residuals(fit)
+```
+
+Let's look at the result better ...(tidy out result)
+```{r}
+broom::glance(fit)
+
+broom::tidy(fit) %>%
+  select(-std.error, -statistic) %>%
+  mutate(
+    term = str_replace(term, "borough", "Borough:")
+  ) %>%
+  knitr::kable(digits = 3)
+```
+
+## Be in control of factors
+```{r}
+nyc_airbnb = 
+  nyc_airbnb %>%
+  mutate(
+    borough = fct_infreq(borough),
+    room_type = fct_infreq(room_type)
+  )
+```
+
+Look at that plot again
+
+```{r}
+nyc_airbnb %>%
+  ggplot(aes(x = stars, y= price, color = borough))+
+  geom_point()
+```
+
+```{r}
+fit = lm(price ~stars + borough, data = nyc_airbnb)
+
+broom::tidy(fit)
+broom::glance(fit)
+```
+
+
+
+
+
+
+
+
+
+
+
